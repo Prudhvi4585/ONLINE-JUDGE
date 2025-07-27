@@ -6,6 +6,7 @@ const app = express();
 const cors = require('cors');
 const dotenv = require('dotenv');
 const generateAIHints = require('./generateAIHints');
+const userAuth = require('./middlewares/userAuth');
 
 
 dotenv.config();
@@ -16,8 +17,12 @@ app.use(express.json());
 
 // http://host.docker.internal:3000/api/v1/problems/getFullProblem/${problemTitle}
 // http://localhost:3000/api/v1/problems/getFullProblem/${problemTitle}
+
+app.get('/',(req,res)=>{
+  res.send('This is the compiler service')
+})
 // 🎯 POST /submit
-app.post('/submit', async (req, res) => {
+app.post('/submit',userAuth, async (req, res) => {
   const { code, language = 'cpp', problemTitle } = req.body;
 
   if (!code || !problemTitle) {
@@ -88,7 +93,7 @@ app.post('/submit', async (req, res) => {
 
 
 // 🎯 POST /run
-app.post('/run', async (req, res) => {
+app.post('/run',userAuth, async (req, res) => {
   const { code, language = 'cpp', input = '' } = req.body;
 
   if (!code) {
@@ -116,7 +121,7 @@ app.post('/run', async (req, res) => {
 
 
 
-app.post('/ai-hints' , async (req, res) => {
+app.post('/ai-hints',userAuth, async (req, res) => {
   const { code, problem } = req.body;
   if (!problem) {
     return res.status(400).json({ message: 'Code and Problem are required' });

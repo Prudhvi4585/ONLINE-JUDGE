@@ -17,32 +17,49 @@ const DeleteProblem = () => {
     setProblemexists(true);
     setSuccessMessage('');
   };
-  const onSubmit = async(data) => {
-    console.log(data);
-    setSuccessMessage('');
-    setProblemexists(true);
-    try{
-      // const res = await axios.delete('http://localhost:3000/api/v1/problems/deleteProblem', data);
-      const res = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/deleteProblem`, {
-        data: { title: data.title },
-      });
-      console.log(res);
-      setSuccessMessage('✅ Problem deleted successfully!');
-      reset();
-    }
-    catch(err){
-      console.log(err);
-      if (err.response?.status === 404) {
-        // setSuccessMessage('❌ Problem not found!');
-        setProblemexists(false);
-      } else {
-        alert("Something went wrong!");
-      }
-    }
-    // You can send a DELETE request like:
-  
 
-  };
+
+
+
+
+
+
+
+
+  const onSubmit = async (data) => {
+  console.log(data);
+  setSuccessMessage('');
+  setProblemexists(true);
+
+  try {
+    const token = localStorage.getItem('token'); // 🔑 Get token from localStorage
+
+    const res = await axios.delete(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/deleteProblem`,
+      {
+        data: { title: data.title }, // send data in body
+        headers: {
+          Authorization: token, // 🔐 Send token in headers
+        },
+      }
+    );
+
+    console.log(res);
+    setSuccessMessage('✅ Problem deleted successfully!');
+    reset();
+
+  } catch (err) {
+    console.log(err);
+    if (err.response?.status === 404) {
+      setProblemexists(false); // ❌ Problem not found
+    } else if (err.response?.status === 401 || err.response?.status === 403) {
+      alert("Unauthorized! Please login again.");
+    } else {
+      alert("Something went wrong!");
+    }
+  }
+};
+
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 min-h-screen">

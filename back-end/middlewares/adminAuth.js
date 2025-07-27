@@ -9,12 +9,13 @@ function adminAuth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(decoded);
 
-    if (!decoded.isAdmin) {
+    if (!decoded.user.isAdmin) {
       return res.status(403).json({ message: 'Access denied. Admins only!' });
     }
 
-    req.user = decoded; // optional, attach user data if needed
+    req.user = decoded.user; // optional: attach user data directly
     next();
   } catch (err) {
     res.status(401).json({ message: 'Invalid token!' });

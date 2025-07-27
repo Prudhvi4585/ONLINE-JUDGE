@@ -46,49 +46,72 @@ const UpdateProblem = () => {
     setLoading(false);
   };
 
-  // ✅ Submit update
+
+
+
+
+
+  
   const onSubmit = async (data) => {
-    setSuccessMessage('');
-    setErrorMessage('');
+  setSuccessMessage('');
+  setErrorMessage('');
 
-    const oldTitle = getValues('searchTitle');
-    const newTitle = data.title;
+  const oldTitle = getValues('searchTitle');
+  const newTitle = data.title;
 
-    if (!oldTitle) {
-      setErrorMessage('❌ Please search and load a problem before updating.');
+  if (!oldTitle) {
+    setErrorMessage('❌ Please search and load a problem before updating.');
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem('token'); // 🔐 Get the token
+
+    // Re-verify existence
+    const check = await axios.get(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/getProblemByTitle/${oldTitle}`
+    );
+    if (!check.data) {
+      setErrorMessage('❌ The original problem title no longer exists.');
       return;
     }
 
-    try {
-      // Re-verify existence
-      const check = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/getProblemByTitle/${oldTitle}`);
-      if (!check.data) {
-        setErrorMessage('❌ The original problem title no longer exists.');
-        return;
-      }
+    const payload = {
+      oldtitle: oldTitle,
+      newtitle: newTitle,
+      statement: data.statement,
+      constraints: data.constraints,
+      difficulty: data.difficulty,
+      testcases: data.testcases,
+    };
 
-      const payload = {
-        oldtitle: oldTitle,
-        newtitle: newTitle,
-        statement: data.statement,
-        constraints: data.constraints,
-        difficulty: data.difficulty,
-        testcases: data.testcases,
-      };
-
-      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/updateProblem`, payload);
-      setSuccessMessage('✅ Problem updated successfully!');
-    } catch (err) {
-      console.error('Update failed', err);
-      if (err.response?.status === 404) {
-        setErrorMessage('❌ Problem with the original title was not found!');
-      } else if (err.response?.status === 409) {
-        setErrorMessage('⚠️ A problem with the new title already exists.');
-      } else {
-        setErrorMessage('❌ Update failed due to server error.');
+    await axios.put(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/updateProblem`,
+      payload,
+      {
+        headers: {
+          Authorization: token, // ✅ Send token in header
+        },
       }
+    );
+
+    setSuccessMessage('✅ Problem updated successfully!');
+  } catch (err) {
+    console.error('Update failed', err);
+    if (err.response?.status === 404) {
+      setErrorMessage('❌ Problem with the original title was not found!');
+    } else if (err.response?.status === 409) {
+      setErrorMessage('⚠️ A problem with the new title already exists.');
+    } else if (err.response?.status === 401 || err.response?.status === 403) {
+      setErrorMessage('❌ Unauthorized! Please login as admin.');
+    } else {
+      setErrorMessage('❌ Update failed due to server error.');
     }
-  };
+  }
+};
+
+
+  
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 min-h-screen">

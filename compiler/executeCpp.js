@@ -21,7 +21,7 @@ const executeCpp = async (filePath, input = "") => {
       }
 
       // 🚀 Step 2: Run the compiled program
-      const runProcess = execFile(outPath, { timeout: 5000 }, (runErr, runStdout, runStderr) => {
+      const runProcess = execFile(outPath, { timeout: 1000 }, (runErr, runStdout, runStderr) => {
         if (runErr || runStderr) {
           return reject(runErr || runStderr);
         }

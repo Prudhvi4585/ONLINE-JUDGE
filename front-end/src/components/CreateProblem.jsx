@@ -19,28 +19,40 @@ const CreateProblem = () => {
   const [newProblem, setNewProblem] = useState(true);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const onSubmit = async (data) => {
-    console.log(data);
+ const onSubmit = async (data) => {
+  console.log(data);
+  setNewProblem(true);
+  setSuccessMessage('');
 
-    setNewProblem(true);
-    setSuccessMessage('');
-    try{
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/createProblem`, data);
-      console.log(res);
-      setSuccessMessage('✅ New problem created successfully!');
-      reset();
+  try {
+    const token = localStorage.getItem('token'); // 🔑 Get token from localStorage
 
-    }
-    catch(err){
-      console.log(err);
-      if (err.response?.status === 409) {
-        setNewProblem(false); // Title already exists
-      } else {
-        alert("Something went wrong!");
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/v1/problems/createProblem`,
+      data,
+      {
+        headers: {
+          Authorization: token, // 🔐 Pass token in Authorization header
+        },
       }
-    }
+    );
 
-  };
+    console.log(res);
+    setSuccessMessage('✅ New problem created successfully!');
+    reset();
+
+  } catch (err) {
+    console.log(err);
+    if (err.response?.status === 409) {
+      setNewProblem(false); // Title already exists
+    } else if (err.response?.status === 401 || err.response?.status === 403) {
+      alert("Unauthorized! Please login again.");
+    } else {
+      alert("Something went wrong!");
+    }
+  }
+};
+
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 min-h-screen">

@@ -2,8 +2,14 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { useNavigate } from 'react-router-dom';
+
+
 
 const Problem = () => {
+
+  const navigate = useNavigate();
+
   const { title } = useParams();
   const [problem, setProblem] = useState(null);
   const [code, setCode] = useState('');
@@ -42,79 +48,126 @@ const Problem = () => {
   const handleMouseDown = () => setIsDragging(true);
   const handleMouseUp = () => setIsDragging(false);
 
-  const runCode = async () => {
-    setIsLoading(true);
-    setError('');
-    setVerdict('');
-    setOutput('');
-    setTestResults([]);
-    try {
-      const res = await axios.post(`${import.meta.env.VITE_COMPILER_URL}/run`, {
+ const runCode = async () => {
+  setIsLoading(true);
+  setError('');
+  setVerdict('');
+  setOutput('');
+  setTestResults([]);
+  try {
+    const token = localStorage.getItem('token');
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_COMPILER_URL}/run`,
+      {
         code,
         language,
         input: customInput
-      });
-      setOutput(res.data.output);
-      setVerdict('✔️ Custom input executed');
-    } catch (err) {
+      },
+      {
+        headers: {
+          Authorization: token,
+        }
+      }
+    );
+
+    setOutput(res.data.output);
+    setVerdict('✔️ Custom input executed');
+  } catch (err) {
+    if (err.response?.status === 401) {
+      navigate('/login'); // ✅ useNavigate redirect
+    } else {
       setError(err.response?.data?.message || 'Something went wrong while running your code');
     }
-    setIsLoading(false);
-  };
+  }
+  setIsLoading(false);
+};
 
-  const submitCode = async () => {
-    setIsLoading(true);
-    setError('');
-    setOutput('');
-    setVerdict('');
-    setTestResults([]);
-    try {
-      const res = await axios.post(`${import.meta.env.VITE_COMPILER_URL}/submit`, {
+
+ const submitCode = async () => {
+  setIsLoading(true);
+  setError('');
+  setOutput('');
+  setVerdict('');
+  setTestResults([]);
+  try {
+    const token = localStorage.getItem('token');
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_COMPILER_URL}/submit`,
+      {
         code,
         language,
         problemTitle: problem.title
-      });
-
-      const { summary, results } = res.data;
-      setVerdict(`✅ ${summary.passed}/${summary.total} Testcases Passed`);
-      setTestResults(results);
-
-      const firstErrorIndex = results.findIndex(r => r.verdict === 'Error');
-      const firstFailIndex = results.findIndex(r => r.verdict === 'Failed');
-      console.log("submitted code");
-      if (firstErrorIndex === -1 && firstFailIndex === -1) {
-        setError('');
-      } else if (firstErrorIndex === -1) {
-        setError(`❌ Wrong Answer on Testcase ${firstFailIndex + 1}`);
-      } else if (firstFailIndex === -1) {
-        setError(`❌ Runtime Error on Testcase ${firstErrorIndex + 1}`);
-      } else {
-        if (firstFailIndex < firstErrorIndex) {
-          setError(`❌ Wrong Answer on Testcase ${firstFailIndex + 1}`);
-        } else {
-          setError(`❌ Runtime Error on Testcase ${firstErrorIndex + 1}`);
+      },
+      {
+        headers: {
+          Authorization: token,
         }
       }
-    } catch (err) {
+    );
+
+    const { summary, results } = res.data;
+    setVerdict(`✅ ${summary.passed}/${summary.total} Testcases Passed`);
+    setTestResults(results);
+
+    const firstErrorIndex = results.findIndex(r => r.verdict === 'Error');
+    const firstFailIndex = results.findIndex(r => r.verdict === 'Failed');
+
+    if (firstErrorIndex === -1 && firstFailIndex === -1) {
+      setError('');
+    } else if (firstErrorIndex === -1) {
+      setError(`❌ Wrong Answer on Testcase ${firstFailIndex + 1}`);
+    } else if (firstFailIndex === -1) {
+      setError(`❌ Runtime Error on Testcase ${firstErrorIndex + 1}`);
+    } else {
+      if (firstFailIndex < firstErrorIndex) {
+        setError(`❌ Wrong Answer on Testcase ${firstFailIndex + 1}`);
+      } else {
+        setError(`❌ Runtime Error on Testcase ${firstErrorIndex + 1}`);
+      }
+    }
+  } catch (err) {
+    if (err.response?.status === 401) {
+      navigate('/login'); // ✅ useNavigate redirect
+    } else {
       setError(err.response?.data?.message || 'Something went wrong while submitting your code');
     }
-    setIsLoading(false);
-  };
+  }
+  setIsLoading(false);
+};
+
 
   const generateHints = async () => {
-    setIsHintLoading(true);
-    setHintContent('');
-    try {
-      const res = await axios.post(`${import.meta.env.VITE_COMPILER_URL}/ai-hints`, {
+  setIsHintLoading(true);
+  setHintContent('');
+  try {
+    const token = localStorage.getItem('token');
+
+    const res = await axios.post(
+      `${import.meta.env.VITE_COMPILER_URL}/ai-hints`,
+      {
         problem,
         code
-      });
-      setHintContent(res.data.airesponce || 'No hints returned.');
-    } catch (err) {
+      },
+      {
+        headers: {
+          Authorization: token,
+        }
+      }
+    );
+
+    setHintContent(res.data.airesponce || 'No hints returned.');
+  } catch (err) {
+    if (err.response?.status === 401) {
+      navigate('/login'); // ⛔ Redirect on unauthorized
+    } else {
       setHintContent('❌ Failed to generate hints. Try again.');
     }
-    setIsHintLoading(false);
-  };
+  }
+  setIsHintLoading(false);
+};
+
 
   return (
     <div

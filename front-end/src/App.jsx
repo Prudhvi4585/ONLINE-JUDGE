@@ -4,7 +4,6 @@ import Footer from './components/Footer.jsx';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from './components/Home.jsx';
 import About from './components/About.jsx';
-import Service from './components/Service.jsx';
 import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import CreateProblem from './components/CreateProblem.jsx';
@@ -21,7 +20,7 @@ function App() {
       element:
       <>
       <Navbar/> 
-      <Home />,
+      <Home />
       <Footer/>
       </>
     },
@@ -30,18 +29,9 @@ function App() {
       element:
       <>
        <Navbar/>
-       <About />,
+       <About />
        <Footer/>
       </>
-    },
-    {
-      path : "/service/:id",
-      element :
-      <>
-      <Navbar/>
-      <Service />
-      <Footer/>
-      </> 
     },
     {
       path : "/login",
